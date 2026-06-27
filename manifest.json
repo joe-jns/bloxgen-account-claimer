@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "Bloxgen Account Claimer",
+  "version": "1.0.0",
+  "description": "One-click claim a Bloxgen-generated Roblox account by changing its password.",
+  "permissions": ["cookies", "storage", "clipboardWrite"],
+  "host_permissions": [
+    "https://*.bloxgen.net/*",
+    "https://*.roblox.com/*"
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Bloxgen Account Claimer",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://bloxgen.net/dashboard/generator*"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}

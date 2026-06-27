@@ -1,0 +1,15 @@
+# Recon / reverse-engineering notes — keep local, never publish
+docs/
+*recon*
+.playwright-mcp/
+recon-samples/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/
+
+# Node (in case tooling is added later)
+node_modules/

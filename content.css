@@ -1,0 +1,58 @@
+.bac-claim {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.bac-claim-btn {
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* Fallback when we couldn't clone a native button */
+.bac-fallback {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 7px 13px;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+/* Compact variant for history rows: a full-width block on its own line(s),
+   left-aligned inside the Password cell, button on top + password stacked BELOW.
+   width:100% keeps the password from spilling into the next column. */
+.bac-claim.bac-compact {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  box-sizing: border-box;
+  gap: 4px;
+  margin: 4px 0 0;
+}
+.bac-compact-btn { padding: 4px 9px; font-size: 12px; border-radius: 7px; }
+
+/* New password shown below the button in history rows (selectable, wraps within the cell). */
+.bac-claim-out {
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  border-radius: 6px;
+  padding: 3px 7px;
+  user-select: all;
+  cursor: text;
+  max-width: 100%;
+  box-sizing: border-box;
+  white-space: normal;
+  word-break: break-all;
+}
