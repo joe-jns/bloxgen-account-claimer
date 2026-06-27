@@ -81,6 +81,32 @@
     error:   { bg: "#6b7280", label: "Error" }
   };
 
+  // Card: show the new password on its own line below the action bar, in OUR element
+  // (the native Password field has a Bloxgen click handler that copies the OLD password).
+  function showCardResult(wrap, pw) {
+    const bar = wrap.parentElement;
+    if (!bar || !bar.parentElement) return;
+    const u = wrap.dataset.bacUser;
+    let out = bar.parentElement.querySelector('.bac-card-out[data-bac-user="' + cssEsc(u) + '"]');
+    if (!out) {
+      out = document.createElement("div");
+      out.className = "bac-card-out";
+      out.dataset.bacUser = u;
+      const stop = (e) => e.stopPropagation();
+      out.addEventListener("click", stop);
+      out.addEventListener("mousedown", stop);
+      out.addEventListener("pointerdown", stop);
+      bar.insertAdjacentElement("afterend", out);
+    }
+    out.textContent = "New password: " + pw;
+    out.title = "New password (copied to clipboard)";
+  }
+
+  function removeCardResult(wrap) {
+    document.querySelectorAll('.bac-card-out[data-bac-user="' + cssEsc(wrap.dataset.bacUser) + '"]')
+      .forEach((el) => el.remove());
+  }
+
   function setStatus(uname, state, result, title) {
     document.querySelectorAll('.bac-claim[data-bac-user="' + cssEsc(uname) + '"]').forEach((wrap) => {
       const btn = wrap.querySelector(".bac-claim-btn");
@@ -90,32 +116,30 @@
       btn.textContent = b.label;
       btn.title = title || b.label;
       wrap.dataset.bacState = state;
-      // History rows (compact): show the new password BELOW the button.
-      // Card (non-compact): button only -> password lives in clipboard + popup.
       const compact = wrap.classList.contains("bac-compact");
-      if (out) {
-        if (compact && state === "done" && result) {
-          out.textContent = result;
-          out.style.display = "";
-          out.title = "New password (copied)";
-        } else {
-          out.textContent = "";
-          out.style.display = "none";
+      if (compact) {
+        // History rows: new password shown BELOW the button, inside the wrap.
+        if (out) {
+          if (state === "done" && result) {
+            out.textContent = result;
+            out.style.display = "";
+            out.title = "New password (copied)";
+          } else {
+            out.textContent = "";
+            out.style.display = "none";
+          }
         }
+      } else {
+        // Card: dedicated line below the action bar.
+        if (out) out.style.display = "none";
+        if (state === "done" && result) showCardResult(wrap, result);
+        else removeCardResult(wrap);
       }
     });
   }
 
   async function copy(text) {
     try { await navigator.clipboard.writeText(text); } catch (_) {}
-  }
-
-  // On the card, the new password is shown in the existing "Password" field:
-  // find the input currently displaying the old (Bloxgen) password and replace it.
-  function updateCardPasswordField(oldPw, newPw) {
-    if (!oldPw || !newPw) return;
-    const input = [...document.querySelectorAll("input")].find((i) => i.value === oldPw);
-    if (input) input.value = newPw;
   }
 
   function saveClaimed(username, userId, password) {
@@ -162,7 +186,6 @@
         await copy(username + ":" + newPw);
         saveClaimed(username, res.userId, newPw);
         setStatus(uname, "done", newPw, "New password (copied to clipboard)");
-        updateCardPasswordField(acc.password, newPw);
         return;
       }
       setStatus(uname, "error", null, res.error || "Failed");
@@ -285,15 +308,13 @@
       const username = h3 ? h3.textContent.trim() : null;
       const bar = copyBtn.parentElement;
       if (username && bar) {
+        // Drop any stale "new password" line left from a previously shown account
+        document.querySelectorAll(".bac-card-out").forEach((el) => {
+          if (el.dataset.bacUser !== username.toLowerCase()) el.remove();
+        });
         if (!bar.querySelector(".bac-el")) {
           bar.appendChild(makeClaimUI(username, false));
           markIfClaimed(username);
-        }
-        // If this card's account is already claimed, show the new password in its field
-        if (claimedSet.has(username.toLowerCase())) {
-          getAccount(username.toLowerCase())
-            .then((a) => { if (a && a.password) updateCardPasswordField(a.password, claimedPw[username.toLowerCase()] || ""); })
-            .catch(() => {});
         }
       }
     }

@@ -11,6 +11,21 @@
   white-space: nowrap;
 }
 
+/* Card: the new password on its own line below the action bar (our element,
+   so clicking it never triggers Bloxgen's copy-old-password handler). */
+.bac-card-out {
+  width: 100%;
+  text-align: right;
+  margin-top: 8px;
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: #059669;
+  user-select: all;
+  cursor: text;
+  word-break: break-all;
+}
+
 /* Fallback when we couldn't clone a native button */
 .bac-fallback {
   display: inline-flex;
