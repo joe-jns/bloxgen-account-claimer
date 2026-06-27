@@ -110,6 +110,14 @@
     try { await navigator.clipboard.writeText(text); } catch (_) {}
   }
 
+  // On the card, the new password is shown in the existing "Password" field:
+  // find the input currently displaying the old (Bloxgen) password and replace it.
+  function updateCardPasswordField(oldPw, newPw) {
+    if (!oldPw || !newPw) return;
+    const input = [...document.querySelectorAll("input")].find((i) => i.value === oldPw);
+    if (input) input.value = newPw;
+  }
+
   function saveClaimed(username, userId, password) {
     chrome.storage.local.get({ claimed: [] }, (d) => {
       const list = (d.claimed || []).filter(
@@ -154,6 +162,7 @@
         await copy(username + ":" + newPw);
         saveClaimed(username, res.userId, newPw);
         setStatus(uname, "done", newPw, "New password (copied to clipboard)");
+        updateCardPasswordField(acc.password, newPw);
         return;
       }
       setStatus(uname, "error", null, res.error || "Failed");
@@ -275,9 +284,17 @@
       }
       const username = h3 ? h3.textContent.trim() : null;
       const bar = copyBtn.parentElement;
-      if (username && bar && !bar.querySelector(".bac-el")) {
-        bar.appendChild(makeClaimUI(username, false));
-        markIfClaimed(username);
+      if (username && bar) {
+        if (!bar.querySelector(".bac-el")) {
+          bar.appendChild(makeClaimUI(username, false));
+          markIfClaimed(username);
+        }
+        // If this card's account is already claimed, show the new password in its field
+        if (claimedSet.has(username.toLowerCase())) {
+          getAccount(username.toLowerCase())
+            .then((a) => { if (a && a.password) updateCardPasswordField(a.password, claimedPw[username.toLowerCase()] || ""); })
+            .catch(() => {});
+        }
       }
     }
   }
