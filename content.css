@@ -19,11 +19,19 @@
   margin-top: 8px;
   font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
   font-size: 13px;
-  font-weight: 600;
-  color: #059669;
-  user-select: all;
-  cursor: text;
   word-break: break-all;
+}
+/* Label is not selectable; only the password is, so a click copies just the password. */
+.bac-card-lbl {
+  user-select: none;
+  color: #6b7280;
+  font-weight: 500;
+}
+.bac-card-val {
+  user-select: all;
+  color: #059669;
+  font-weight: 700;
+  cursor: text;
 }
 
 /* Fallback when we couldn't clone a native button */

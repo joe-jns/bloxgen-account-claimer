@@ -98,7 +98,15 @@
       out.addEventListener("pointerdown", stop);
       bar.insertAdjacentElement("afterend", out);
     }
-    out.textContent = "New password: " + pw;
+    out.innerHTML = "";
+    const lbl = document.createElement("span");
+    lbl.className = "bac-card-lbl";
+    lbl.textContent = "New password: ";
+    const val = document.createElement("span");
+    val.className = "bac-card-val";
+    val.textContent = pw;
+    out.appendChild(lbl);
+    out.appendChild(val);
     out.title = "New password (copied to clipboard)";
   }
 
