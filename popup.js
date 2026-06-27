@@ -1,6 +1,23 @@
-// Popup: password mode + fixed password + claimed-accounts log
+// Popup: bulk export + password mode + fixed password + claimed-accounts log
 
+const exportBtn = document.getElementById("exportAll");
 const fixedPw = document.getElementById("fixedPw");
+
+const EXPORT_LABEL = "Export all accounts (.txt)";
+exportBtn.addEventListener("click", async () => {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab || !/^https:\/\/bloxgen\.net\/dashboard\/generator/.test(tab.url || "")) {
+    exportBtn.textContent = "Open the Generator page first";
+    setTimeout(() => (exportBtn.textContent = EXPORT_LABEL), 2000);
+    return;
+  }
+  exportBtn.textContent = "Exporting...";
+  chrome.tabs.sendMessage(tab.id, { type: "EXPORT_ALL" }, (res) => {
+    if (chrome.runtime.lastError || !res) exportBtn.textContent = "Failed (reload the page)";
+    else exportBtn.textContent = "Exported " + res.count + " accounts";
+    setTimeout(() => (exportBtn.textContent = EXPORT_LABEL), 2500);
+  });
+});
 const claimedEl = document.getElementById("claimed");
 const countEl = document.getElementById("count");
 const copyAllBtn = document.getElementById("copyAll");

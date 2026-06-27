@@ -335,6 +335,45 @@
   }
   new MutationObserver(scheduleInject).observe(document.body, { childList: true, subtree: true });
 
+  // --- Bulk export (all pages -> user:pass:cookie .txt) ---------------------
+  async function exportAllAccounts() {
+    const rows = [];
+    let page = 1;
+    while (page <= 500) {
+      const r = await fetch(
+        "https://api.bloxgen.net/api/accounts/history?page=" + page + "&limit=100",
+        { credentials: "include", cache: "no-store" }
+      );
+      const j = await r.json();
+      const hist = (j && j.data && j.data.history) || [];
+      for (const a of hist) {
+        if (a.username && a.cookie && a.password) {
+          rows.push(a.username + ":" + a.password + ":" + a.cookie);
+        }
+      }
+      const pg = j && j.data && j.data.pagination;
+      if (!pg || !pg.hasNextPage) break;
+      page++;
+    }
+    const blob = new Blob([rows.join("\n")], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "bloxgen-accounts.txt";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    return { count: rows.length };
+  }
+
+  chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+    if (msg && msg.type === "EXPORT_ALL") {
+      exportAllAccounts().then(sendResponse).catch((e) => sendResponse({ error: String(e) }));
+      return true; // async
+    }
+  });
+
   // Load the claimed list first, then inject and sync states
   chrome.storage.local.get({ claimed: [] }, (d) => {
     const list = d.claimed || [];

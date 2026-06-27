@@ -34,6 +34,9 @@ Roblox's password-change API. **No auto-login, no captcha.**
   password is also shown **below the button**; the card stays button-only.
 - **Already-claimed accounts show `Claimed` and can't be claimed again** — the state persists
   across reloads (cleared only if you clear the list in the popup).
+- Popup → **Export all accounts (.txt)** downloads every account across all pages as
+  `username:password:cookie`, for bulk password-changing with a Node script (see the
+  companion `bloxgen-bulk-claimer` tool).
 - Popup settings:
   - **Random (strong)** — generates a unique strong password per account (default).
   - **Fixed** — every claimed account gets the same password you type.
