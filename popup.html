@@ -3,49 +3,72 @@
 <head>
   <meta charset="utf-8" />
   <style>
+    /* Bloxgen design tokens (extracted from the site) */
+    :root {
+      --bg: oklch(100% 0 0);
+      --fg: oklch(32.11% 0 0);
+      --primary: oklch(58.31% 0.2225 26.3342);
+      --primary-fg: oklch(100% 0 0);
+      --muted-fg: oklch(54.79% 0.0267 17.9979);
+      --border: oklch(89.62% 0.0066 17.2795);
+      --secondary: oklch(96.05% 0.0032 17.214);
+      --accent: oklch(96.05% 0.0032 17.214);
+      --input: oklch(95.82% 0.0043 17.2326);
+    }
+    * { box-sizing: border-box; }
     body {
       width: 320px;
       margin: 0;
-      padding: 14px 16px;
-      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-      background: #0f1115;
-      color: #e5e7eb;
+      padding: 16px;
+      font-family: "GeistSans", system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--fg);
     }
-    h1 { font-size: 14px; margin: 0 0 4px; }
-    h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: #9ca3af; margin: 16px 0 8px; }
-    .hint { font-size: 11px; color: #9ca3af; margin: 0 0 10px; }
+    .brand { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+    .dot { width: 9px; height: 9px; border-radius: 999px; background: var(--primary); }
+    h1 { font-size: 15px; font-weight: 600; margin: 0; }
+    h2 { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted-fg); margin: 16px 0 8px; font-weight: 600; }
+    .hint { font-size: 12px; color: var(--muted-fg); margin: 0; line-height: 1.4; }
+
     .seg { display: flex; gap: 6px; margin-bottom: 10px; }
     .seg label {
-      flex: 1; text-align: center; font-size: 12px; padding: 7px 0; border-radius: 7px;
-      background: #1f2937; cursor: pointer; border: 1px solid #374151;
+      flex: 1; text-align: center; font-size: 12px; padding: 8px 0; border-radius: 8px;
+      background: var(--secondary); cursor: pointer; border: 1px solid var(--border); color: var(--muted-fg);
+      transition: background .12s ease, color .12s ease, border-color .12s ease;
     }
     .seg input { display: none; }
-    .seg input:checked + span { font-weight: 700; color: #fff; }
-    .seg label:has(input:checked) { background: #6d28d9; border-color: #6d28d9; }
-    input[type="text"] {
-      width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 7px;
-      border: 1px solid #374151; background: #111827; color: #e5e7eb; font-size: 13px;
-    }
-    input[type="text"]:disabled { opacity: .4; }
-    .field-hint { font-size: 10px; color: #6b7280; margin-top: 4px; }
+    .seg label:has(input:checked) { background: var(--primary); border-color: var(--primary); color: var(--primary-fg); font-weight: 600; }
 
-    .claimed { max-height: 200px; overflow: auto; border: 1px solid #1f2937; border-radius: 8px; }
-    .claimed:empty::after { content: "No claimed accounts yet."; display: block; padding: 12px; font-size: 12px; color: #6b7280; }
-    .item { display: flex; justify-content: space-between; gap: 8px; padding: 7px 10px; border-bottom: 1px solid #1f2937; font-size: 12px; }
+    input[type="text"] {
+      width: 100%; padding: 9px 11px; border-radius: 8px;
+      border: 1px solid var(--border); background: var(--bg); color: var(--fg); font-size: 13px; font-family: inherit;
+    }
+    input[type="text"]:focus { outline: none; border-color: var(--primary); }
+    input[type="text"]:disabled { opacity: .5; background: var(--input); }
+    .field-hint { font-size: 10px; color: var(--muted-fg); margin-top: 5px; }
+
+    .claimed { max-height: 200px; overflow: auto; border: 1px solid var(--border); border-radius: 8px; }
+    .claimed:empty::after { content: "No claimed accounts yet."; display: block; padding: 12px; font-size: 12px; color: var(--muted-fg); }
+    .item { display: flex; justify-content: space-between; gap: 8px; padding: 8px 10px; border-bottom: 1px solid var(--border); font-size: 12px; }
     .item:last-child { border-bottom: none; }
-    .item .u { color: #e5e7eb; font-weight: 600; }
-    .item .p { font-family: ui-monospace, Consolas, monospace; color: #34d399; user-select: all; }
+    .item .u { color: var(--fg); font-weight: 600; }
+    .item .p { font-family: ui-monospace, Consolas, monospace; color: #047857; user-select: all; }
+
     .actions { display: flex; gap: 8px; margin-top: 10px; }
     button.act {
-      flex: 1; cursor: pointer; border: none; border-radius: 7px; padding: 8px 10px;
-      font-size: 12px; font-weight: 600; color: #fff; background: #6d28d9;
+      flex: 1; cursor: pointer; border-radius: 8px; padding: 9px 10px;
+      font-size: 13px; font-weight: 500; font-family: inherit;
+      color: var(--primary-fg); background: var(--primary); border: 1px solid var(--primary);
+      transition: filter .12s ease, background .12s ease;
     }
-    button.act.sec { background: #374151; }
-    button.act:hover { filter: brightness(1.1); }
+    button.act:hover { filter: brightness(0.94); }
+    button.act.sec { background: var(--bg); color: var(--fg); border: 1px solid var(--border); }
+    button.act.sec:hover { background: var(--accent); filter: none; }
+    #exportAll { width: 100%; }
   </style>
 </head>
 <body>
-  <h1>Bloxgen Account Claimer</h1>
+  <div class="brand"><span class="dot"></span><h1>Account Claimer</h1></div>
   <div class="hint">Click <b>Claim</b> on an account (confirm once) to change its Roblox password and take ownership.</div>
 
   <h2>Bulk export</h2>
