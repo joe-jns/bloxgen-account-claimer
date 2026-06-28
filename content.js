@@ -284,10 +284,26 @@
   }
 
   // --- Injection ------------------------------------------------------------
+  function onGeneratorPage() {
+    return /^\/dashboard\/generator/.test(location.pathname);
+  }
+
+  // The "Generation History" table specifically — NOT some other table on the page
+  // (e.g. the pricing/plans comparison). Identified by its Username + Generated At headers.
+  function findHistoryTable() {
+    const tables = document.querySelectorAll("table");
+    for (const t of tables) {
+      const heads = [...t.querySelectorAll("th")].map((th) => th.textContent.trim().toLowerCase());
+      if (heads.includes("username") && heads.includes("generated at")) return t;
+    }
+    return null;
+  }
+
   function injectAll() {
+    if (!onGeneratorPage()) return; // SPA: don't inject after navigating away
     captureNativeClass();
 
-    const table = document.querySelector("table");
+    const table = findHistoryTable();
     if (table) {
       table.querySelectorAll("tbody tr").forEach((row) => {
         if (!row.cells || row.cells.length < 3) return;
