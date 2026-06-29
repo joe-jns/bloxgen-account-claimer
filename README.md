@@ -7,6 +7,10 @@ the account is no longer controlled by Bloxgen's stored credentials.
 It uses the account's cookie and current password (both provided by Bloxgen) plus
 Roblox's password-change API. **No auto-login, no captcha.**
 
+> **Companion tools** (same Bloxgen page, coexist side by side):
+> [Bloxgen Voice Checker](https://github.com/joe-jns/bloxgen-voice-checker) — check if voice chat is enabled (+ age group) ·
+> [Bloxgen Discord bot](https://github.com/joe-jns/bloxgen-discord-bot) — generate & manage accounts from Discord.
+
 ---
 
 ## Table of contents
