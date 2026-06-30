@@ -110,38 +110,12 @@ async function claim(cookie, currentPassword, newPassword) {
   }
 }
 
-// Fetch the Roblox age range (e.g. 18-20, 21+) for one account's cookie.
-async function fetchAgeGroup(cookie) {
-  await setCookie(cookie);
-  try {
-    let res;
-    for (let t = 0; t <= 4; t++) {
-      res = await fetch(AGE_GROUP_URL, { credentials: "include", cache: "no-store" });
-      if (res.status !== 429) break;
-      const ra = parseFloat(res.headers.get("retry-after"));
-      await new Promise((r) => setTimeout(r, (ra > 0 ? ra * 1000 : 1500 * (t + 1)) + Math.random() * 400));
-    }
-    if (res.status === 401 || res.status === 403) return { ok: true, alive: false };
-    if (!res.ok) return { ok: false, error: "HTTP " + res.status };
-    const j = await res.json();
-    return { ok: true, alive: true, ageGroup: ageGroupLabel(j.ageGroupTranslationKey) };
-  } catch (e) {
-    return { ok: false, error: String(e && e.message ? e.message : e) };
-  } finally {
-    await clearCookie();
-  }
-}
-
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg && msg.type === "CLAIM" &&
       typeof msg.cookie === "string" &&
       typeof msg.currentPassword === "string" &&
       typeof msg.newPassword === "string") {
     enqueue(() => claim(msg.cookie, msg.currentPassword, msg.newPassword)).then(sendResponse);
-    return true; // async response
-  }
-  if (msg && msg.type === "GET_AGE_GROUP" && typeof msg.cookie === "string") {
-    enqueue(() => fetchAgeGroup(msg.cookie)).then(sendResponse);
     return true; // async response
   }
 });

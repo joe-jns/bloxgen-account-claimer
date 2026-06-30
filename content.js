@@ -392,55 +392,9 @@
     return { count: lines.length };
   }
 
-  // Progress toast (for the slow age-group export)
-  function showProgress(text) {
-    let el = document.getElementById("bac-progress");
-    if (!el) {
-      el = document.createElement("div");
-      el.id = "bac-progress";
-      el.className = "bac-progress";
-      document.body.appendChild(el);
-    }
-    el.textContent = text;
-  }
-  function hideProgress() {
-    const el = document.getElementById("bac-progress");
-    if (el) el.remove();
-  }
-  function sendBg(message) {
-    return new Promise((resolve) =>
-      chrome.runtime.sendMessage(message, (res) => resolve(chrome.runtime.lastError ? null : res))
-    );
-  }
-
-  // Slow: user:pass:cookie:ageGroup (one Roblox call per account, serialized in the background)
-  async function exportWithAgeGroup() {
-    const accts = await collectAllAccounts();
-    if (!accts.length) return { count: 0 };
-    const lines = [];
-    try {
-      for (let i = 0; i < accts.length; i++) {
-        const a = accts[i];
-        showProgress("Fetching age groups… " + (i + 1) + "/" + accts.length);
-        let age = "?";
-        const res = await sendBg({ type: "GET_AGE_GROUP", cookie: a.cookie });
-        if (res && res.ok) age = res.alive ? (res.ageGroup || "unknown") : "dead";
-        lines.push(a.username + ":" + a.password + ":" + a.cookie + ":" + age);
-      }
-    } finally {
-      hideProgress();
-    }
-    downloadTxt("bloxgen-accounts-age.txt", lines.join("\n"));
-    return { count: lines.length };
-  }
-
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     if (msg && msg.type === "EXPORT_ALL") {
       exportAllAccounts().then(sendResponse).catch((e) => sendResponse({ error: String(e) }));
-      return true; // async
-    }
-    if (msg && msg.type === "EXPORT_AGE") {
-      exportWithAgeGroup().then(sendResponse).catch((e) => { hideProgress(); sendResponse({ error: String(e) }); });
       return true; // async
     }
   });

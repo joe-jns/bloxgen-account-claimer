@@ -41,10 +41,10 @@ Roblox's password-change API. **No auto-login, no captcha.**
 - Popup → **Export all accounts (.txt)** downloads every account across all pages as
   `username:password:cookie`, for bulk password-changing with a Node script (see the
   companion `bloxgen-bulk-claimer` tool).
-- Popup → **Export + age group (slow)** does the same but appends each account's Roblox
-  **age range** → `username:password:cookie:ageGroup` (`<13`, `13-15`, `16-17`, `18-20`,
-  `21+`). It makes one Roblox call per account (serialized, rate-limited), so it's slow — a
-  progress toast shows on the page and it keeps running even if you close the popup.
+- When you claim an account, its Roblox **age range** (`<13`, `13-15`, `16-17`, `18-20`, `21+`)
+  is captured **at claim time** — while the cookie is still valid, just before the password
+  change signs the session out. It's stored with the account and shown as a chip next to it in
+  the popup's claimed list.
 - Popup settings:
   - **Random (strong)** — generates a unique strong password per account (default).
   - **Fixed** — every claimed account gets the same password you type.
