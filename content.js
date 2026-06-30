@@ -403,35 +403,38 @@
       chrome.runtime.sendMessage(message, (res) => resolve(chrome.runtime.lastError ? null : res))
     );
   }
-  function getClaimedAges() {
+  function getClaimedMap() {
     return new Promise((resolve) =>
       chrome.storage.local.get({ claimed: [] }, (d) => {
         const m = {};
-        for (const c of d.claimed || []) if (c.ageGroup) m[c.username.toLowerCase()] = c.ageGroup;
+        for (const c of d.claimed || []) m[c.username.toLowerCase()] = c;
         resolve(m);
       })
     );
   }
 
   // Export ALL accounts as username:password:ageGroup (no cookie).
-  // Age comes from the stored value for already-claimed accounts, otherwise it's fetched
-  // per account via the background (one Roblox call each, serialized) -> slow.
+  // For accounts already claimed here, we use the NEW password + the age captured at claim
+  // time (instant). For the rest, the age is fetched per account via the background
+  // (one Roblox call each, serialized) -> slow.
   async function exportAllAccounts() {
     const accts = await collectAllAccounts();
     if (!accts.length) return { count: 0 };
-    const claimedAges = await getClaimedAges();
+    const claimed = await getClaimedMap();
     const lines = [];
     try {
       for (let i = 0; i < accts.length; i++) {
         const a = accts[i];
-        showProgress("Fetching age groups… " + (i + 1) + "/" + accts.length);
-        let age = claimedAges[a.username.toLowerCase()];
+        showProgress("Exporting… " + (i + 1) + "/" + accts.length);
+        const c = claimed[a.username.toLowerCase()];
+        const password = c && c.password ? c.password : a.password; // new password if claimed
+        let age = c && c.ageGroup;
         if (!age) {
           const res = await sendBg({ type: "GET_AGE_GROUP", cookie: a.cookie });
           if (res && res.ok) age = res.alive ? (res.ageGroup || "unknown") : "dead";
           else age = "?";
         }
-        lines.push(a.username + ":" + a.password + ":" + age);
+        lines.push(a.username + ":" + password + ":" + age);
       }
     } finally {
       hideProgress();
