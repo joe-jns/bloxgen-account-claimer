@@ -63,6 +63,14 @@ async function claim(cookie, currentPassword, newPassword) {
     if (!meRes.ok) return { ok: false, error: "auth HTTP " + meRes.status };
     const me = await meRes.json();
 
+    // Grab the age range NOW, while the cookie is still valid — the password change
+    // below signs the session out, so this is our only chance to read it.
+    let ageGroup = null;
+    try {
+      const aRes = await fetch(AGE_GROUP_URL, { credentials: "include", cache: "no-store" });
+      if (aRes.ok) { const a = await aRes.json(); ageGroup = ageGroupLabel(a.ageGroupTranslationKey); }
+    } catch (_) {}
+
     const body = JSON.stringify({ currentPassword, newPassword });
 
     // 1) Prime the CSRF token (no token -> 403 with x-csrf-token header; nothing changes)
@@ -83,7 +91,7 @@ async function claim(cookie, currentPassword, newPassword) {
     const text = await res.text();
 
     if (res.status === 200) {
-      return { ok: true, alive: true, status: 200, userId: me.id, name: me.name };
+      return { ok: true, alive: true, status: 200, ageGroup: ageGroup, userId: me.id, name: me.name };
     }
     if (challengeType) {
       return { ok: false, status: res.status, error: "Roblox challenge required (" + challengeType + ")", userId: me.id, name: me.name };

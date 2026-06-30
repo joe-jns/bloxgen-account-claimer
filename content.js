@@ -150,12 +150,12 @@
     try { await navigator.clipboard.writeText(text); } catch (_) {}
   }
 
-  function saveClaimed(username, userId, password) {
+  function saveClaimed(username, userId, password, ageGroup) {
     chrome.storage.local.get({ claimed: [] }, (d) => {
       const list = (d.claimed || []).filter(
         (x) => x.username.toLowerCase() !== username.toLowerCase()
       );
-      list.unshift({ username, userId, password, at: Date.now() });
+      list.unshift({ username, userId, password, ageGroup: ageGroup || null, at: Date.now() });
       chrome.storage.local.set({ claimed: list });
     });
   }
@@ -192,8 +192,8 @@
         claimedSet.add(uname);
         claimedPw[uname] = newPw;
         await copy(username + ":" + newPw);
-        saveClaimed(username, res.userId, newPw);
-        setStatus(uname, "done", newPw, "New password (copied to clipboard)");
+        saveClaimed(username, res.userId, newPw, res.ageGroup);
+        setStatus(uname, "done", newPw, "New password (copied to clipboard)" + (res.ageGroup ? " · age " + res.ageGroup : ""));
         return;
       }
       setStatus(uname, "error", null, res.error || "Failed");

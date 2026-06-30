@@ -67,13 +67,22 @@ function render(list) {
   for (const a of list) {
     const row = document.createElement("div");
     row.className = "item";
+    const left = document.createElement("span");
+    left.className = "left";
     const u = document.createElement("span");
     u.className = "u";
     u.textContent = a.username;
+    left.appendChild(u);
+    if (a.ageGroup) {
+      const age = document.createElement("span");
+      age.className = "age";
+      age.textContent = a.ageGroup;
+      left.appendChild(age);
+    }
     const p = document.createElement("span");
     p.className = "p";
     p.textContent = a.password;
-    row.appendChild(u);
+    row.appendChild(left);
     row.appendChild(p);
     claimedEl.appendChild(row);
   }
