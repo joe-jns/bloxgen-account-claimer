@@ -351,9 +351,9 @@
   }
   new MutationObserver(scheduleInject).observe(document.body, { childList: true, subtree: true });
 
-  // --- Bulk export (all pages -> user:pass:cookie .txt) ---------------------
-  async function exportAllAccounts() {
-    const rows = [];
+  // --- Bulk export ----------------------------------------------------------
+  async function collectAllAccounts() {
+    const accts = [];
     let page = 1;
     while (page <= 500) {
       const r = await fetch(
@@ -363,29 +363,84 @@
       const j = await r.json();
       const hist = (j && j.data && j.data.history) || [];
       for (const a of hist) {
-        if (a.username && a.cookie && a.password) {
-          rows.push(a.username + ":" + a.password + ":" + a.cookie);
-        }
+        if (a.username && a.cookie && a.password) accts.push(a);
       }
       const pg = j && j.data && j.data.pagination;
       if (!pg || !pg.hasNextPage) break;
       page++;
     }
-    const blob = new Blob([rows.join("\n")], { type: "text/plain" });
+    return accts;
+  }
+
+  function downloadTxt(filename, text) {
+    const blob = new Blob([text], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "bloxgen-accounts.txt";
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
-    return { count: rows.length };
+  }
+
+  // Fast: user:pass:cookie
+  async function exportAllAccounts() {
+    const accts = await collectAllAccounts();
+    const lines = accts.map((a) => a.username + ":" + a.password + ":" + a.cookie);
+    downloadTxt("bloxgen-accounts.txt", lines.join("\n"));
+    return { count: lines.length };
+  }
+
+  // Progress toast (for the slow age-group export)
+  function showProgress(text) {
+    let el = document.getElementById("bac-progress");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "bac-progress";
+      el.className = "bac-progress";
+      document.body.appendChild(el);
+    }
+    el.textContent = text;
+  }
+  function hideProgress() {
+    const el = document.getElementById("bac-progress");
+    if (el) el.remove();
+  }
+  function sendBg(message) {
+    return new Promise((resolve) =>
+      chrome.runtime.sendMessage(message, (res) => resolve(chrome.runtime.lastError ? null : res))
+    );
+  }
+
+  // Slow: user:pass:cookie:ageGroup (one Roblox call per account, serialized in the background)
+  async function exportWithAgeGroup() {
+    const accts = await collectAllAccounts();
+    if (!accts.length) return { count: 0 };
+    const lines = [];
+    try {
+      for (let i = 0; i < accts.length; i++) {
+        const a = accts[i];
+        showProgress("Fetching age groups… " + (i + 1) + "/" + accts.length);
+        let age = "?";
+        const res = await sendBg({ type: "GET_AGE_GROUP", cookie: a.cookie });
+        if (res && res.ok) age = res.alive ? (res.ageGroup || "unknown") : "dead";
+        lines.push(a.username + ":" + a.password + ":" + a.cookie + ":" + age);
+      }
+    } finally {
+      hideProgress();
+    }
+    downloadTxt("bloxgen-accounts-age.txt", lines.join("\n"));
+    return { count: lines.length };
   }
 
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     if (msg && msg.type === "EXPORT_ALL") {
       exportAllAccounts().then(sendResponse).catch((e) => sendResponse({ error: String(e) }));
+      return true; // async
+    }
+    if (msg && msg.type === "EXPORT_AGE") {
+      exportWithAgeGroup().then(sendResponse).catch((e) => { hideProgress(); sendResponse({ error: String(e) }); });
       return true; // async
     }
   });

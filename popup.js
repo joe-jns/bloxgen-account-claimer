@@ -18,6 +18,24 @@ exportBtn.addEventListener("click", async () => {
     setTimeout(() => (exportBtn.textContent = EXPORT_LABEL), 2500);
   });
 });
+
+const exportAgeBtn = document.getElementById("exportAge");
+const AGE_LABEL = "Export + age group (slow)";
+exportAgeBtn.addEventListener("click", async () => {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab || !/^https:\/\/bloxgen\.net\/dashboard\/generator/.test(tab.url || "")) {
+    exportAgeBtn.textContent = "Open the Generator page first";
+    setTimeout(() => (exportAgeBtn.textContent = AGE_LABEL), 2000);
+    return;
+  }
+  // Long-running: progress is shown on the page; it keeps going even if this popup closes.
+  chrome.tabs.sendMessage(tab.id, { type: "EXPORT_AGE" }, (res) => {
+    if (chrome.runtime.lastError || !res) return;
+    exportAgeBtn.textContent = "Exported " + res.count + " (age)";
+    setTimeout(() => (exportAgeBtn.textContent = AGE_LABEL), 2500);
+  });
+  exportAgeBtn.textContent = "Running on the page…";
+});
 const claimedEl = document.getElementById("claimed");
 const countEl = document.getElementById("count");
 const copyAllBtn = document.getElementById("copyAll");

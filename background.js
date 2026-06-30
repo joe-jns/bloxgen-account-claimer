@@ -12,6 +12,19 @@
 const ROBLOX_URL = "https://www.roblox.com/";
 const COOKIE_NAME = ".ROBLOSECURITY";
 const CHANGE_URL = "https://auth.roblox.com/v2/user/passwords/change";
+const AGE_GROUP_URL = "https://apis.roblox.com/user-settings-api/v1/account-insights/age-group";
+
+// Map Roblox age-group translation keys to a short label.
+//   Label.AgeGroupOver21 -> 21+   Label.AgeGroup18To20 -> 18-20   Label.AgeGroupUnder13 -> <13
+function ageGroupLabel(key) {
+  if (!key) return null;
+  const m = String(key).replace("Label.AgeGroup", "");
+  if (m.startsWith("Over")) return m.slice(4) + "+";
+  if (m.startsWith("Under")) return "<" + m.slice(5);
+  const r = m.match(/^(\d+)To(\d+)$/);
+  if (r) return r[1] + "-" + r[2];
+  return m;
+}
 
 // --- Queue: one claim at a time ---------------------------------------------
 let chain = Promise.resolve();
@@ -89,12 +102,38 @@ async function claim(cookie, currentPassword, newPassword) {
   }
 }
 
+// Fetch the Roblox age range (e.g. 18-20, 21+) for one account's cookie.
+async function fetchAgeGroup(cookie) {
+  await setCookie(cookie);
+  try {
+    let res;
+    for (let t = 0; t <= 4; t++) {
+      res = await fetch(AGE_GROUP_URL, { credentials: "include", cache: "no-store" });
+      if (res.status !== 429) break;
+      const ra = parseFloat(res.headers.get("retry-after"));
+      await new Promise((r) => setTimeout(r, (ra > 0 ? ra * 1000 : 1500 * (t + 1)) + Math.random() * 400));
+    }
+    if (res.status === 401 || res.status === 403) return { ok: true, alive: false };
+    if (!res.ok) return { ok: false, error: "HTTP " + res.status };
+    const j = await res.json();
+    return { ok: true, alive: true, ageGroup: ageGroupLabel(j.ageGroupTranslationKey) };
+  } catch (e) {
+    return { ok: false, error: String(e && e.message ? e.message : e) };
+  } finally {
+    await clearCookie();
+  }
+}
+
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg && msg.type === "CLAIM" &&
       typeof msg.cookie === "string" &&
       typeof msg.currentPassword === "string" &&
       typeof msg.newPassword === "string") {
     enqueue(() => claim(msg.cookie, msg.currentPassword, msg.newPassword)).then(sendResponse);
+    return true; // async response
+  }
+  if (msg && msg.type === "GET_AGE_GROUP" && typeof msg.cookie === "string") {
+    enqueue(() => fetchAgeGroup(msg.cookie)).then(sendResponse);
     return true; // async response
   }
 });

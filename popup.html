@@ -73,7 +73,11 @@
 
   <h2>Bulk export</h2>
   <button class="act" id="exportAll">Export all accounts (.txt)</button>
-  <div class="field-hint">Downloads every account across all pages as <code>user:pass:cookie</code>, for the bulk password-changer Node script.</div>
+  <button class="act sec" id="exportAge" style="margin-top:8px;">Export + age group (slow)</button>
+  <div class="field-hint">
+    <b>All accounts</b> → <code>user:pass:cookie</code> (instant, for the bulk password-changer).<br />
+    <b>+ age group</b> → <code>user:pass:cookie:ageGroup</code> (18-20, 21+…). One Roblox call per account, so it's slow.
+  </div>
 
   <h2>New password</h2>
   <div class="seg">
