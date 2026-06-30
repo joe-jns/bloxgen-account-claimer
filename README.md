@@ -38,9 +38,9 @@ Roblox's password-change API. **No auto-login, no captcha.**
   password is also shown **below the button**; the card stays button-only.
 - **Already-claimed accounts show `Claimed` and can't be claimed again** — the state persists
   across reloads (cleared only if you clear the list in the popup).
-- Popup → **Export all accounts (.txt)** downloads every account across all pages as
-  `username:password:cookie`, for bulk password-changing with a Node script (see the
-  companion `bloxgen-bulk-claimer` tool).
+- Popup → **Export claimed accounts (.txt)** downloads the accounts you've claimed as
+  `username:password:ageGroup`. A small **export all accounts** link below it exports every
+  account (`username:password:cookie`) for the bulk password-changer Node script.
 - When you claim an account, its Roblox **age range** (`<13`, `13-15`, `16-17`, `18-20`, `21+`)
   is captured **at claim time** — while the cookie is still valid, just before the password
   change signs the session out. It's stored with the account and shown as a chip next to it in

@@ -1,21 +1,53 @@
 // Popup: bulk export + password mode + fixed password + claimed-accounts log
 
-const exportBtn = document.getElementById("exportAll");
+const exportClaimedBtn = document.getElementById("exportClaimed");
+const exportAllLink = document.getElementById("exportAll");
 const fixedPw = document.getElementById("fixedPw");
 
-const EXPORT_LABEL = "Export all accounts (.txt)";
-exportBtn.addEventListener("click", async () => {
+function downloadTxt(filename, text) {
+  const blob = new Blob([text], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// Primary: export only the CLAIMED accounts -> username:password:ageGroup (from local log)
+const CLAIMED_LABEL = "Export claimed accounts (.txt)";
+exportClaimedBtn.addEventListener("click", () => {
+  chrome.storage.local.get({ claimed: [] }, (d) => {
+    const list = d.claimed || [];
+    if (!list.length) {
+      exportClaimedBtn.textContent = "No claimed accounts yet";
+      setTimeout(() => (exportClaimedBtn.textContent = CLAIMED_LABEL), 1800);
+      return;
+    }
+    const lines = list.map((a) => a.username + ":" + a.password + ":" + (a.ageGroup || "unknown"));
+    downloadTxt("bloxgen-claimed.txt", lines.join("\n"));
+    exportClaimedBtn.textContent = "Exported " + lines.length + " claimed";
+    setTimeout(() => (exportClaimedBtn.textContent = CLAIMED_LABEL), 2000);
+  });
+});
+
+// Secondary: export ALL accounts (needs the Bloxgen page -> content script fetches them)
+const ALL_LABEL = "or export all accounts (user:pass:cookie)";
+exportAllLink.addEventListener("click", async (e) => {
+  e.preventDefault();
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tab || !/^https:\/\/bloxgen\.net\/dashboard\/generator/.test(tab.url || "")) {
-    exportBtn.textContent = "Open the Generator page first";
-    setTimeout(() => (exportBtn.textContent = EXPORT_LABEL), 2000);
+    exportAllLink.textContent = "open the Generator page first";
+    setTimeout(() => (exportAllLink.textContent = ALL_LABEL), 2000);
     return;
   }
-  exportBtn.textContent = "Exporting...";
+  exportAllLink.textContent = "exporting…";
   chrome.tabs.sendMessage(tab.id, { type: "EXPORT_ALL" }, (res) => {
-    if (chrome.runtime.lastError || !res) exportBtn.textContent = "Failed (reload the page)";
-    else exportBtn.textContent = "Exported " + res.count + " accounts";
-    setTimeout(() => (exportBtn.textContent = EXPORT_LABEL), 2500);
+    if (chrome.runtime.lastError || !res) exportAllLink.textContent = "failed (reload the page)";
+    else exportAllLink.textContent = "exported " + res.count + " accounts";
+    setTimeout(() => (exportAllLink.textContent = ALL_LABEL), 2500);
   });
 });
 const claimedEl = document.getElementById("claimed");
