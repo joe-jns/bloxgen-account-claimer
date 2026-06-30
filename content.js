@@ -384,17 +384,65 @@
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
-  // Fast: user:pass:cookie
+  function showProgress(text) {
+    let el = document.getElementById("bac-progress");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "bac-progress";
+      el.className = "bac-progress";
+      document.body.appendChild(el);
+    }
+    el.textContent = text;
+  }
+  function hideProgress() {
+    const el = document.getElementById("bac-progress");
+    if (el) el.remove();
+  }
+  function sendBg(message) {
+    return new Promise((resolve) =>
+      chrome.runtime.sendMessage(message, (res) => resolve(chrome.runtime.lastError ? null : res))
+    );
+  }
+  function getClaimedAges() {
+    return new Promise((resolve) =>
+      chrome.storage.local.get({ claimed: [] }, (d) => {
+        const m = {};
+        for (const c of d.claimed || []) if (c.ageGroup) m[c.username.toLowerCase()] = c.ageGroup;
+        resolve(m);
+      })
+    );
+  }
+
+  // Export ALL accounts as username:password:ageGroup (no cookie).
+  // Age comes from the stored value for already-claimed accounts, otherwise it's fetched
+  // per account via the background (one Roblox call each, serialized) -> slow.
   async function exportAllAccounts() {
     const accts = await collectAllAccounts();
-    const lines = accts.map((a) => a.username + ":" + a.password + ":" + a.cookie);
+    if (!accts.length) return { count: 0 };
+    const claimedAges = await getClaimedAges();
+    const lines = [];
+    try {
+      for (let i = 0; i < accts.length; i++) {
+        const a = accts[i];
+        showProgress("Fetching age groups… " + (i + 1) + "/" + accts.length);
+        let age = claimedAges[a.username.toLowerCase()];
+        if (!age) {
+          const res = await sendBg({ type: "GET_AGE_GROUP", cookie: a.cookie });
+          if (res && res.ok) age = res.alive ? (res.ageGroup || "unknown") : "dead";
+          else age = "?";
+        }
+        lines.push(a.username + ":" + a.password + ":" + age);
+      }
+    } finally {
+      hideProgress();
+    }
     downloadTxt("bloxgen-accounts.txt", lines.join("\n"));
     return { count: lines.length };
   }
 
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     if (msg && msg.type === "EXPORT_ALL") {
-      exportAllAccounts().then(sendResponse).catch((e) => sendResponse({ error: String(e) }));
+      exportAllAccounts().then(sendResponse).catch((e) => { hideProgress(); sendResponse({ error: String(e) }); });
       return true; // async
     }
   });

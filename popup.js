@@ -33,8 +33,9 @@ exportClaimedBtn.addEventListener("click", () => {
   });
 });
 
-// Secondary: export ALL accounts (needs the Bloxgen page -> content script fetches them)
-const ALL_LABEL = "or export all accounts (user:pass:cookie)";
+// Secondary: export ALL accounts as user:pass:age (needs the Bloxgen page; slow — one Roblox
+// call per non-claimed account). Progress is shown on the page; it keeps going if the popup closes.
+const ALL_LABEL = "or export all accounts (user:pass:age — slow)";
 exportAllLink.addEventListener("click", async (e) => {
   e.preventDefault();
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -43,12 +44,12 @@ exportAllLink.addEventListener("click", async (e) => {
     setTimeout(() => (exportAllLink.textContent = ALL_LABEL), 2000);
     return;
   }
-  exportAllLink.textContent = "exporting…";
   chrome.tabs.sendMessage(tab.id, { type: "EXPORT_ALL" }, (res) => {
-    if (chrome.runtime.lastError || !res) exportAllLink.textContent = "failed (reload the page)";
-    else exportAllLink.textContent = "exported " + res.count + " accounts";
+    if (chrome.runtime.lastError || !res) return;
+    exportAllLink.textContent = "exported " + res.count + " accounts";
     setTimeout(() => (exportAllLink.textContent = ALL_LABEL), 2500);
   });
+  exportAllLink.textContent = "running on the page…";
 });
 const claimedEl = document.getElementById("claimed");
 const countEl = document.getElementById("count");
