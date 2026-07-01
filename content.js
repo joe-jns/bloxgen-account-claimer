@@ -35,7 +35,7 @@
     const list = (j && j.data && j.data.history) || [];
     for (const a of list) {
       if (a && a.username && a.cookie) {
-        map[a.username.toLowerCase()] = { cookie: a.cookie, password: a.password || "" };
+        map[a.username.toLowerCase()] = { cookie: a.cookie, password: a.password || "", created: a.created || null };
       }
     }
     accMap = map;
@@ -150,12 +150,12 @@
     try { await navigator.clipboard.writeText(text); } catch (_) {}
   }
 
-  function saveClaimed(username, userId, password, ageGroup) {
+  function saveClaimed(username, userId, password, ageGroup, created) {
     chrome.storage.local.get({ claimed: [] }, (d) => {
       const list = (d.claimed || []).filter(
         (x) => x.username.toLowerCase() !== username.toLowerCase()
       );
-      list.unshift({ username, userId, password, ageGroup: ageGroup || null, at: Date.now() });
+      list.unshift({ username, userId, password, ageGroup: ageGroup || null, created: created || null, at: Date.now() });
       chrome.storage.local.set({ claimed: list });
     });
   }
@@ -192,7 +192,7 @@
         claimedSet.add(uname);
         claimedPw[uname] = newPw;
         await copy(username + ":" + newPw);
-        saveClaimed(username, res.userId, newPw, res.ageGroup);
+        saveClaimed(username, res.userId, newPw, res.ageGroup, acc.created);
         setStatus(uname, "done", newPw, "New password (copied to clipboard)" + (res.ageGroup ? " · age " + res.ageGroup : ""));
         return;
       }
@@ -413,6 +413,14 @@
     );
   }
 
+  // Account age (how old the Roblox account is), in days, from Bloxgen's `created` date.
+  function accountAge(created) {
+    if (!created) return "?";
+    const t = Date.parse(created);
+    if (Number.isNaN(t)) return "?";
+    return Math.max(0, Math.floor((Date.now() - t) / 86400000)) + "d";
+  }
+
   // Export ALL accounts as username:password:ageGroup (no cookie).
   // For accounts already claimed here, we use the NEW password + the age captured at claim
   // time (instant). For the rest, the age is fetched per account via the background
@@ -434,7 +442,7 @@
           if (res && res.ok) age = res.alive ? (res.ageGroup || "unknown") : "dead";
           else age = "?";
         }
-        lines.push(a.username + ":" + password + ":" + age);
+        lines.push(a.username + ":" + password + ":" + age + ":" + accountAge(a.created));
       }
     } finally {
       hideProgress();

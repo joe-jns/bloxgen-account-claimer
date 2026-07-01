@@ -16,6 +16,14 @@ function downloadTxt(filename, text) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+// Account age (how old the Roblox account is), in days, from the stored `created` date.
+function accountAge(created) {
+  if (!created) return "?";
+  const t = Date.parse(created);
+  if (Number.isNaN(t)) return "?";
+  return Math.max(0, Math.floor((Date.now() - t) / 86400000)) + "d";
+}
+
 // Primary: export only the CLAIMED accounts -> username:password:ageGroup (from local log)
 const CLAIMED_LABEL = "Export claimed accounts (.txt)";
 exportClaimedBtn.addEventListener("click", () => {
@@ -26,7 +34,7 @@ exportClaimedBtn.addEventListener("click", () => {
       setTimeout(() => (exportClaimedBtn.textContent = CLAIMED_LABEL), 1800);
       return;
     }
-    const lines = list.map((a) => a.username + ":" + a.password + ":" + (a.ageGroup || "unknown"));
+    const lines = list.map((a) => a.username + ":" + a.password + ":" + (a.ageGroup || "unknown") + ":" + accountAge(a.created));
     downloadTxt("bloxgen-claimed.txt", lines.join("\n"));
     exportClaimedBtn.textContent = "Exported " + lines.length + " claimed";
     setTimeout(() => (exportClaimedBtn.textContent = CLAIMED_LABEL), 2000);

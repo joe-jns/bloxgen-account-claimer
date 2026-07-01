@@ -39,10 +39,11 @@ Roblox's password-change API. **No auto-login, no captcha.**
 - **Already-claimed accounts show `Claimed` and can't be claimed again** — the state persists
   across reloads (cleared only if you clear the list in the popup).
 - Popup → **Export claimed accounts (.txt)** downloads the accounts you've claimed as
-  `username:password:ageGroup` (instant, from the local log). A small **export all accounts**
-  link below it exports every account as `username:password:ageGroup` (no cookie) — the age is
-  fetched per non-claimed account (one Roblox call each), so it's slow and shows a progress
-  toast on the page.
+  `username:password:ageGroup:accountAge` (instant, from the local log). A small **export all
+  accounts** link below it exports every account in the same format (no cookie) — the age group
+  is fetched per non-claimed account (one Roblox call each), so it's slow and shows a progress
+  toast on the page. `ageGroup` is the Roblox age range (`18-20`, `21+`…); `accountAge` is how
+  old the account is in days (e.g. `28d`).
 - When you claim an account, its Roblox **age range** (`<13`, `13-15`, `16-17`, `18-20`, `21+`)
   is captured **at claim time** — while the cookie is still valid, just before the password
   change signs the session out. It's stored with the account and shown as a chip next to it in
