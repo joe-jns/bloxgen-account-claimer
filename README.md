@@ -49,7 +49,10 @@ Roblox's password-change API. **No auto-login, no captcha.**
   change signs the session out. It's stored with the account and shown as a chip next to it in
   the popup's claimed list.
 - Popup settings:
-  - **Random (strong)** — generates a unique strong password per account (default).
+  - **Random** — a unique password per account, configurable: an optional **prefix** (e.g. `qw`),
+    a **character set** (letters + numbers / letters only / numbers only) and a **length** for
+    the random part. Example: prefix `qw` + numbers + length 3 → `qw847`. Keep the total ≥ 8
+    (Roblox rejects passwords shorter than 8 or too simple).
   - **Fixed** — every claimed account gets the same password you type.
 - Popup keeps a **Claimed accounts** list with **Copy all (user:pass)** and **Clear**.
 

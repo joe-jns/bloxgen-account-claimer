@@ -65,18 +65,42 @@ const copyAllBtn = document.getElementById("copyAll");
 const clearBtn = document.getElementById("clear");
 
 // --- Settings ---------------------------------------------------------------
-chrome.storage.sync.get({ mode: "random", fixedPw: "" }, (v) => {
-  document.querySelector('input[name="mode"][value="' + v.mode + '"]').checked = true;
-  fixedPw.value = v.fixedPw || "";
-  fixedPw.disabled = v.mode !== "fixed";
-});
+const randomPrefix = document.getElementById("randomPrefix");
+const randomCharset = document.getElementById("randomCharset");
+const randomLength = document.getElementById("randomLength");
+const randomOpts = document.getElementById("randomOpts");
+const fixedOpts = document.getElementById("fixedOpts");
+
+function showMode(mode) {
+  randomOpts.style.display = mode === "fixed" ? "none" : "";
+  fixedOpts.style.display = mode === "fixed" ? "" : "none";
+}
+
+chrome.storage.sync.get(
+  { mode: "random", fixedPw: "", randomPrefix: "", randomCharset: "alnum", randomLength: 12 },
+  (v) => {
+    document.querySelector('input[name="mode"][value="' + v.mode + '"]').checked = true;
+    fixedPw.value = v.fixedPw || "";
+    randomPrefix.value = v.randomPrefix || "";
+    randomCharset.value = v.randomCharset || "alnum";
+    randomLength.value = v.randomLength || 12;
+    showMode(v.mode);
+  }
+);
 
 document.querySelectorAll('input[name="mode"]').forEach((r) => {
   r.addEventListener("change", () => {
     const mode = document.querySelector('input[name="mode"]:checked').value;
-    fixedPw.disabled = mode !== "fixed";
+    showMode(mode);
     chrome.storage.sync.set({ mode });
   });
+});
+
+randomPrefix.addEventListener("input", () => chrome.storage.sync.set({ randomPrefix: randomPrefix.value }));
+randomCharset.addEventListener("change", () => chrome.storage.sync.set({ randomCharset: randomCharset.value }));
+randomLength.addEventListener("input", () => {
+  const n = Math.max(1, Math.min(30, parseInt(randomLength.value, 10) || 12));
+  chrome.storage.sync.set({ randomLength: n });
 });
 
 fixedPw.addEventListener("input", () => {

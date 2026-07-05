@@ -45,6 +45,14 @@
     }
     input[type="text"]:focus { outline: none; border-color: var(--primary); }
     input[type="text"]:disabled { opacity: .5; background: var(--input); }
+    input[type="number"], select {
+      padding: 9px 11px; border-radius: 8px;
+      border: 1px solid var(--border); background: var(--bg); color: var(--fg); font-size: 13px; font-family: inherit;
+    }
+    input[type="number"]:focus, select:focus { outline: none; border-color: var(--primary); }
+    .row2 { display: flex; gap: 8px; margin-top: 8px; }
+    .row2 select { flex: 1; min-width: 0; }
+    .row2 input[type="number"] { width: 78px; flex: 0 0 auto; }
     .field-hint { font-size: 10px; color: var(--muted-fg); margin-top: 5px; }
     .mini-link { display: inline-block; margin-top: 8px; font-size: 11px; color: var(--muted-fg); text-decoration: underline; cursor: pointer; }
     .mini-link:hover { color: var(--fg); }
@@ -81,11 +89,26 @@
 
   <h2>New password</h2>
   <div class="seg">
-    <label><input type="radio" name="mode" value="random" /><span>Random (strong)</span></label>
+    <label><input type="radio" name="mode" value="random" /><span>Random</span></label>
     <label><input type="radio" name="mode" value="fixed" /><span>Fixed</span></label>
   </div>
-  <input type="text" id="fixedPw" placeholder="Your fixed password (min 8 chars)" />
-  <div class="field-hint">Used for every claim when "Fixed" is selected. Avoid the username inside it.</div>
+  <div id="randomOpts">
+    <input type="text" id="randomPrefix" placeholder="Prefix (optional, e.g. qw)" />
+    <div class="row2">
+      <select id="randomCharset">
+        <option value="alnum">Letters + numbers</option>
+        <option value="letters">Letters only</option>
+        <option value="digits">Numbers only</option>
+      </select>
+      <input type="number" id="randomLength" min="1" max="30" placeholder="Len" />
+    </div>
+    <div class="field-hint">Random chars added after the prefix. Total must be ≥ 8 for Roblox (and not too simple, or Roblox rejects it).</div>
+  </div>
+
+  <div id="fixedOpts">
+    <input type="text" id="fixedPw" placeholder="Your fixed password (min 8 chars)" />
+    <div class="field-hint">Used for every claim when "Fixed" is selected. Avoid the username inside it.</div>
+  </div>
 
   <h2>Claimed accounts (<span id="count">0</span>)</h2>
   <div class="claimed" id="claimed"></div>

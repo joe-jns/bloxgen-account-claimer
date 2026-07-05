@@ -16,15 +16,15 @@
   let accMap = {};           // username(lower) -> { cookie, password }
   let lastFetch = 0;
   let nativeBtnClass = "";
-  let settings = { mode: "random", fixedPw: "" };
+  const SETTINGS_DEFAULTS = { mode: "random", fixedPw: "", randomPrefix: "", randomCharset: "alnum", randomLength: 12 };
+  let settings = { ...SETTINGS_DEFAULTS };
   let claimedSet = new Set(); // usernames(lower) already claimed
   let claimedPw = {};         // username(lower) -> new password
 
-  chrome.storage.sync.get({ mode: "random", fixedPw: "" }, (v) => { settings = v; });
+  chrome.storage.sync.get(SETTINGS_DEFAULTS, (v) => { settings = v; });
   chrome.storage.onChanged.addListener((ch, area) => {
     if (area !== "sync") return;
-    if (ch.mode) settings.mode = ch.mode.newValue;
-    if (ch.fixedPw) settings.fixedPw = ch.fixedPw.newValue;
+    for (const k of Object.keys(SETTINGS_DEFAULTS)) if (ch[k]) settings[k] = ch[k].newValue;
   });
 
   // --- Bloxgen accounts -----------------------------------------------------
@@ -48,18 +48,19 @@
   }
 
   // --- New password ---------------------------------------------------------
+  const RANDOM_SETS = {
+    letters: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
+    digits: "0123456789",
+    alnum: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+  };
+
+  // prefix + N random chars from the chosen set, e.g. prefix "qw" + digits(3) -> "qw847"
   function genPassword() {
-    const U = "ABCDEFGHJKLMNPQRSTUVWXYZ", L = "abcdefghijkmnopqrstuvwxyz",
-          D = "23456789", S = "!@#$%*?";
-    const all = U + L + D + S;
-    const pick = (s) => s[Math.floor(Math.random() * s.length)];
-    const p = [pick(U), pick(L), pick(D), pick(S)];
-    for (let i = 0; i < 10; i++) p.push(pick(all));
-    for (let i = p.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [p[i], p[j]] = [p[j], p[i]];
-    }
-    return p.join("");
+    const chars = RANDOM_SETS[settings.randomCharset] || RANDOM_SETS.alnum;
+    const len = Math.max(1, parseInt(settings.randomLength, 10) || 12);
+    let out = settings.randomPrefix || "";
+    for (let i = 0; i < len; i++) out += chars[Math.floor(Math.random() * chars.length)];
+    return out;
   }
 
   function newPasswordFor() {
