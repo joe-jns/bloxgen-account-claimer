@@ -80,7 +80,7 @@ function updateRandomWarn() {
   const total = (randomPrefix.value || "").length + (parseInt(randomLength.value, 10) || 0);
   if (total < 8) {
     randomWarn.textContent = "⚠ Total is " + total + " chars — Roblox needs 8+ (it will be padded to 8).";
-    randomWarn.style.display = "";
+    randomWarn.style.display = "block";
   } else {
     randomWarn.style.display = "none";
   }

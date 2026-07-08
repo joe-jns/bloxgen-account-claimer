@@ -70,6 +70,25 @@ background  →  set .ROBLOSECURITY on .roblox.com
 
 ---
 
+## ⚠️ Does not work on US accounts
+
+Roblox is rolling out **Bound Auth Tokens** (`x-bound-auth-token`) — a per-request cryptographic
+signature that sensitive operations (like changing a password) now require. It's produced by a
+private key that is **created during a real login and is non-extractable**, so **a cookie alone
+cannot generate it**.
+
+This is being deployed **by region, US accounts first**. The result:
+
+- **Non‑US accounts** → still work (the old CSRF flow `403 → 200`). ✅
+- **US accounts** → `auth.roblox.com` answers **401 "not authenticated"** with no CSRF token, so
+  the password change can't go through. The extension marks these **`US ✕`** and skips them. ❌
+
+The only way to change a US account's password is to **actually log in** (which establishes the
+bound key), which brings back the login captcha — so it can't be done from a cookie in the
+extension. Voice-chat and age-group checks are unaffected (those endpoints don't need the token).
+
+---
+
 ## ⚠️ Read this first
 
 - **Changing a password is irreversible.** If you lose the new password, you lose the account.

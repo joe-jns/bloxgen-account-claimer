@@ -79,7 +79,15 @@ async function claim(cookie, currentPassword, newPassword) {
       headers: { "content-type": "application/json" }, body
     });
     const csrf = probe.headers.get("x-csrf-token");
-    if (!csrf) return { ok: false, error: "no CSRF token (HTTP " + probe.status + ")", userId: me.id, name: me.name };
+    if (!csrf) {
+      // Roblox's bound-auth-token (rolled out on US accounts first): the cookie is valid
+      // everywhere else, but auth.roblox.com refuses the password change with 401 and no
+      // CSRF token. A cookie can't produce the required signed token -> not claimable.
+      if (probe.status === 401) {
+        return { ok: false, blocked: true, error: "US account — Roblox blocks cookie password change (bound-auth-token). Not claimable.", userId: me.id, name: me.name };
+      }
+      return { ok: false, error: "no CSRF token (HTTP " + probe.status + ")", userId: me.id, name: me.name };
+    }
 
     // 2) Real password change
     const res = await fetch(CHANGE_URL, {

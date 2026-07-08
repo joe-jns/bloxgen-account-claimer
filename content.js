@@ -84,7 +84,8 @@
     pending: { bg: "#6b7280", label: "Claiming..." },
     done:    { bg: "#059669", label: "Claimed" },
     dead:    { bg: "#ea580c", label: "Dead" },
-    error:   { bg: "#6b7280", label: "Error" }
+    error:   { bg: "#6b7280", label: "Error" },
+    blocked: { bg: "#6b7280", label: "US ✕" }   // US account: bound-auth-token, not claimable
   };
 
   // Card: show the new password on its own line below the action bar, in OUR element
@@ -194,6 +195,7 @@
         return;
       }
       if (res.ok && res.alive === false) { setStatus(uname, "dead", null, "Cookie dead - regenerate"); return; }
+      if (res.blocked) { setStatus(uname, "blocked", null, res.error); return; }
       if (res.ok && res.status === 200) {
         claimedSet.add(uname);
         claimedPw[uname] = newPw;
