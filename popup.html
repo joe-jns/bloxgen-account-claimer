@@ -54,6 +54,7 @@
     .row2 select { flex: 1; min-width: 0; }
     .row2 input[type="number"] { width: 78px; flex: 0 0 auto; }
     .field-hint { font-size: 10px; color: var(--muted-fg); margin-top: 5px; }
+    .warn { font-size: 11px; font-weight: 600; color: #dc2626; margin-top: 5px; display: none; }
     .mini-link { display: inline-block; margin-top: 8px; font-size: 11px; color: var(--muted-fg); text-decoration: underline; cursor: pointer; }
     .mini-link:hover { color: var(--fg); }
 
@@ -103,6 +104,7 @@
       <input type="number" id="randomLength" min="1" max="30" placeholder="Len" />
     </div>
     <div class="field-hint">Random chars added after the prefix. Total must be ≥ 8 for Roblox (and not too simple, or Roblox rejects it).</div>
+    <div class="warn" id="randomWarn"></div>
   </div>
 
   <div id="fixedOpts">

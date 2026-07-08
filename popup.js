@@ -70,10 +70,20 @@ const randomCharset = document.getElementById("randomCharset");
 const randomLength = document.getElementById("randomLength");
 const randomOpts = document.getElementById("randomOpts");
 const fixedOpts = document.getElementById("fixedOpts");
+const randomWarn = document.getElementById("randomWarn");
 
 function showMode(mode) {
   randomOpts.style.display = mode === "fixed" ? "none" : "";
   fixedOpts.style.display = mode === "fixed" ? "" : "none";
+}
+function updateRandomWarn() {
+  const total = (randomPrefix.value || "").length + (parseInt(randomLength.value, 10) || 0);
+  if (total < 8) {
+    randomWarn.textContent = "⚠ Total is " + total + " chars — Roblox needs 8+ (it will be padded to 8).";
+    randomWarn.style.display = "";
+  } else {
+    randomWarn.style.display = "none";
+  }
 }
 
 chrome.storage.sync.get(
@@ -85,6 +95,7 @@ chrome.storage.sync.get(
     randomCharset.value = v.randomCharset || "alnum";
     randomLength.value = v.randomLength || 12;
     showMode(v.mode);
+    updateRandomWarn();
   }
 );
 
@@ -96,11 +107,12 @@ document.querySelectorAll('input[name="mode"]').forEach((r) => {
   });
 });
 
-randomPrefix.addEventListener("input", () => chrome.storage.sync.set({ randomPrefix: randomPrefix.value }));
+randomPrefix.addEventListener("input", () => { chrome.storage.sync.set({ randomPrefix: randomPrefix.value }); updateRandomWarn(); });
 randomCharset.addEventListener("change", () => chrome.storage.sync.set({ randomCharset: randomCharset.value }));
 randomLength.addEventListener("input", () => {
   const n = Math.max(1, Math.min(30, parseInt(randomLength.value, 10) || 12));
   chrome.storage.sync.set({ randomLength: n });
+  updateRandomWarn();
 });
 
 fixedPw.addEventListener("input", () => {

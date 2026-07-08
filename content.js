@@ -54,11 +54,16 @@
     alnum: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
   };
 
-  // prefix + N random chars from the chosen set, e.g. prefix "qw" + digits(3) -> "qw847"
+  // prefix + N random chars from the chosen set, e.g. prefix "qw" + digits(3) -> "qw847".
+  // Safety net: Roblox rejects passwords under 8 chars, so the random part is padded to
+  // guarantee prefix+random >= 8 even if the configured length is too short.
   function genPassword() {
     const chars = RANDOM_SETS[settings.randomCharset] || RANDOM_SETS.alnum;
-    const len = Math.max(1, parseInt(settings.randomLength, 10) || 12);
-    let out = settings.randomPrefix || "";
+    const prefix = settings.randomPrefix || "";
+    let len = Math.max(1, parseInt(settings.randomLength, 10) || 12);
+    const minRandom = Math.max(1, 8 - prefix.length);
+    if (len < minRandom) len = minRandom;
+    let out = prefix;
     for (let i = 0; i < len; i++) out += chars[Math.floor(Math.random() * chars.length)];
     return out;
   }
