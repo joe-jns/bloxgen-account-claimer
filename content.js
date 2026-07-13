@@ -237,7 +237,8 @@
 
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.className = (compact ? "bac-fallback bac-compact-btn" : (nativeBtnClass || "bac-fallback")) + " bac-claim-btn";
+    // Always clone the native Bloxgen button look (card AND history rows) so it matches.
+    btn.className = (nativeBtnClass || "bac-fallback") + " bac-claim-btn";
     btn.style.backgroundColor = BTN.idle.bg;
     btn.style.color = "#ffffff";
     btn.style.borderColor = "transparent";
@@ -327,18 +328,21 @@
       });
     }
 
-    const copyBtn = [...document.querySelectorAll("button")].find(
-      (b) => b.textContent.trim() === "Copy Cookie"
+    // Card action bar: anchor on a native red button (Login/Auto Cookie/Auto Login) that
+    // still has text — its parent IS the action bar. (Copy Cookie is now an icon-only
+    // button inside a nested pill, so it can't be used as the anchor anymore.)
+    const anchor = [...document.querySelectorAll("button")].find(
+      (b) => ["Auto Cookie", "Auto Login", "Login"].includes(b.textContent.trim()) && !b.closest("table")
     );
-    if (copyBtn) {
-      let node = copyBtn, h3 = null, d = 0;
+    if (anchor) {
+      const bar = anchor.parentElement;
+      let node = bar, h3 = null, d = 0;
       while (node && d < 8) {
         h3 = node.querySelector ? node.querySelector("h3") : null;
         if (h3) break;
         node = node.parentElement; d++;
       }
       const username = h3 ? h3.textContent.trim() : null;
-      const bar = copyBtn.parentElement;
       if (username && bar) {
         // Drop any stale "new password" line left from a previously shown account
         document.querySelectorAll(".bac-card-out").forEach((el) => {
